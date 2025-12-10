@@ -1,0 +1,101 @@
+---
+title: "Personal Sleep Analysis"
+author: "Nathan Vernon"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(corrplot)
+
+# Load the CLEAN data we just saved
+sleep <- read_csv("../data/sleep_clean2.csv")
+```
+
+## Project Overview
+I have tracked my sleep data over approximately 70 nights using an iPhone App. The goal of this analysis is to identify factors that contribute to higher sleep quality and deeper rest.
+
+## 1. Exploratory Analysis: The "Weekend Effect"
+First, I wanted to see if my sleep quality varies significantly by the day of the week.
+
+```{r day_analysis}
+# Reorder days so they start on Monday instead of alphabetical
+sleep$day_of_week <- factor(sleep$day_of_week, 
+                            levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+
+ggplot(sleep, aes(x = day_of_week, y = sleep_quality, fill = day_of_week)) +
+  geom_boxplot(alpha = 0.6) +
+  theme_minimal() +
+  labs(title = "Sleep Quality Distribution by Day",
+       y = "Quality Score (0-100)",
+       x = "") +
+  theme(legend.position = "none")
+```
+
+**Observation:** [You will write your own observation here later!]
+
+## 2. Hypothesis Testing: Does Walking More Improve Deep Sleep?
+My hypothesis is that physical activity (Steps) correlates with more recovery (Deep Sleep).
+
+```{r steps_vs_deep}
+ggplot(sleep, aes(x = steps, y = deep_sleep_hours)) +
+  geom_point(color = "#2c3e50", size = 3) +
+  geom_smooth(method = "lm", color = "#e74c3c") + # Adds a trend line
+  theme_minimal() +
+  labs(title = "Correlation: Daily Steps vs. Deep Sleep",
+       subtitle = "Does moving more lead to deeper rest?",
+       x = "Steps Taken",
+       y = "Deep Sleep (Hours)")
+```
+
+**Observation:** [fill]
+
+## 3.Hypothesis Testing: Does "Restlessness" really mean Restless?
+
+```{r Restless}
+ggplot(sleep, aes(x = movements_per_hour, y = sleep_quality)) +
+  geom_point(color = "darkorange", alpha = 0.6, size = 3) +
+  geom_smooth(method = "lm", color = "black") +
+  theme_minimal() +
+  labs(title = "Restlessness is the Real Sleep Killer",
+       subtitle = "Higher movement frequency correlates strongly with lower quality scores",
+       x = "Movements per Hour",
+       y = "Sleep Quality Score")
+```
+
+**Observation:** [fill]
+
+## 4. Correaltion Heatmap
+
+```{r heatmap}
+library(corrplot)
+
+# Select only the numeric columns we care about
+cor_data <- sleep |>  
+  select(sleep_quality, regularity, deep_sleep_hours, total_sleep_hours, time_in_bed_hours, 
+         movements_per_hour, steps, dream_seconds, light_seconds) |> 
+  cor() # Calculate the correlation matrix
+
+# Plot it
+corrplot(cor_data, 
+         method = "color", 
+         type = "upper", 
+         col = colorRampPalette(c("blue", "white", "red"))(200),
+         addCoef.col = "black", # Add the actual numbers
+         tl.col = "black",      # Text label color
+         diag = FALSE)          # Hide the middle line
+```
+
+
+## 3. Statistical Model
+I am running a Linear Regression to quantify the impact of steps and bedtime duration on my overall quality score.
+
+```{r model}
+# Build a simple linear model
+model <- lm(sleep_quality ~ steps + total_sleep_hours, data = sleep)
+
+# Show the results
+summary(model)
+```
