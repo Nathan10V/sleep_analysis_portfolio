@@ -23,6 +23,7 @@ sleep_clean <- sleep_data |>
     total_sleep_hours = time_asleep_seconds / 3600,
     time_in_bed_hours = time_in_bed_seconds / 3600,
     deep_sleep_hours = deep_seconds / 3600,
+    dream_hours = dream_seconds / 3600,
     
     # Extract the Day of the Week and corrects for when start times are past midnight
     sleep_date = date(start - hours(6)),

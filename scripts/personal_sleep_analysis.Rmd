@@ -18,7 +18,7 @@ sleep <- read_csv("../data/sleep_clean2.csv")
 I have tracked my sleep data over approximately 70 nights using an iPhone App. The goal of this analysis is to identify factors that contribute to higher sleep quality and deeper rest.
 
 ## 1. Exploratory Analysis: The "Weekend Effect"
-First, I wanted to see if my sleep quality varies significantly by the day of the week.
+First, I wanted to see if my sleep quality varies significantly by the day of the week. The day represents the night of sleep. For example, going to bed Monday and waking up Tuesday is considered Monday. I accounted for going to bed past midnight by subtracting 6 hours from every night so that any bedtime before 6 AM was listed as the correct night.
 
 ```{r day_analysis}
 # Reorder days so they start on Monday instead of alphabetical
@@ -72,30 +72,47 @@ ggplot(sleep, aes(x = movements_per_hour, y = sleep_quality)) +
 ```{r heatmap}
 library(corrplot)
 
-# Select only the numeric columns we care about
+# Select only the numeric columns to analyze
 cor_data <- sleep |>  
   select(sleep_quality, regularity, deep_sleep_hours, total_sleep_hours, time_in_bed_hours, 
-         movements_per_hour, steps, dream_seconds, light_seconds) |> 
+         movements_per_hour, steps, dream_hours, light_seconds) |> 
   cor() # Calculate the correlation matrix
 
-# Plot it
 corrplot(cor_data, 
          method = "color", 
          type = "upper", 
-         col = colorRampPalette(c("blue", "white", "red"))(200),
+         col = colorRampPalette(c("blue", "white", "red"))(600),
          addCoef.col = "black", # Add the actual numbers
          tl.col = "black",      # Text label color
+         # Make plot readable
+         number.cex = .7,
+         tl.cex = .7,
+         tl.srt = 45,
          diag = FALSE)          # Hide the middle line
 ```
+**Observation** [fill]
+
+
+
+**Obsvervation** [fill]
 
 
 ## 3. Statistical Model
-I am running a Linear Regression to quantify the impact of steps and bedtime duration on my overall quality score.
+I am running a Linear Regression to quantify the impact of steps and bedtime duration on my overall quality score. I am using the variables that gave strong correlations to sleep_quality in the above Correlation Matrix.
 
 ```{r model}
 # Build a simple linear model
-model <- lm(sleep_quality ~ steps + total_sleep_hours, data = sleep)
+model <- lm(sleep_quality ~ total_sleep_hours + deep_sleep_hours + movements_per_hour + dream_hours, data = sleep)
 
 # Show the results
 summary(model)
 ```
+
+## 6. Checking for Multicollinearity
+```{r Multicollinearity}
+library(car)
+
+# 2. Calculate VIF
+vif(model)
+```
+
